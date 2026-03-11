@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Colis;
+use App\Models\Emplacement;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     /**
-     * Affiche le tableau de bord avec les statistiques et derniers colis.
+     * Affiche le tableau de bord - Centre de commandement logistique.
      */
     public function __invoke(): View
     {
@@ -35,6 +36,19 @@ class DashboardController extends Controller
             ->where('statut', '!=', 'livré')
             ->count();
 
+        // Nouvelles variables analytiques
+        $totalEmplacements = Emplacement::count();
+        $emplacementsOccupes = Emplacement::where('occupe', true)->count();
+        $tauxOccupation = $totalEmplacements > 0
+            ? (int) round(($emplacementsOccupes / $totalEmplacements) * 100)
+            : 0;
+
+        $poidsTotal = (float) Colis::where('statut', 'en_stock')->sum('poids_kg');
+
+        $colisFragiles = Colis::where('statut', 'en_stock')->where('fragile', true)->count();
+
+        $tauxRetours = Colis::where('statut', 'retour')->count();
+
         return view('dashboard', [
             'enStock' => $enStock,
             'enExpedition' => $enExpedition,
@@ -42,6 +56,10 @@ class DashboardController extends Controller
             'alertes' => $alertes,
             'derniersColis' => $derniersColis,
             'colisFragilesEnRetard' => $colisFragilesEnRetard,
+            'tauxOccupation' => $tauxOccupation,
+            'poidsTotal' => $poidsTotal,
+            'colisFragiles' => $colisFragiles,
+            'tauxRetours' => $tauxRetours,
         ]);
     }
 }
