@@ -7,9 +7,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/colis', fn () => view('colis.index'))->name('colis.index');
+    Route::get('/clients', fn () => view('clients.index'))->name('clients.index');
+    Route::get('/transporteurs', fn () => view('transporteurs.index'))->name('transporteurs.index');
+    Route::get('/assistant-ia', fn () => view('assistant-ia.index'))->name('assistant-ia.index');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
