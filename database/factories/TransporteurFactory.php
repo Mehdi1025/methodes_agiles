@@ -33,7 +33,9 @@ class TransporteurFactory extends Factory
         return [
             'nom' => $transporteur['nom'],
             'contact' => $transporteur['contact'],
+            'telephone' => null,
             'delai_moyen_jours' => fake()->numberBetween(1, 5),
+            'is_active' => true,
         ];
     }
 

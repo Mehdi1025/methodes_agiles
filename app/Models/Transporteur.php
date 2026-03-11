@@ -19,8 +19,22 @@ class Transporteur extends Model
     protected $fillable = [
         'nom',
         'contact',
+        'telephone',
         'delai_moyen_jours',
+        'is_active',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     /**
      * Get the colis for the transporteur.

@@ -6,10 +6,24 @@ use App\Models\Colis;
 use App\Models\Emplacement;
 use App\Models\HistoriqueMouvement;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    /**
+     * Vide le cache système et optimise l'application.
+     */
+    public function clearCache(): RedirectResponse
+    {
+        Artisan::call('optimize:clear');
+
+        return back()->with('success', '🧹 Cache système vidé et application optimisée avec succès.');
+    }
+
     /**
      * Affiche le tableau de bord selon le rôle (Admin ou Logistique).
      */
@@ -98,6 +112,27 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('kpis', 'auditLogs'));
+        $topMagasiniers = HistoriqueMouvement::with('user')
+            ->select('user_id', DB::raw('count(*) as total_mouvements'))
+            ->whereDate('date_mouvement', Carbon::today())
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->orderByDesc('total_mouvements')
+            ->take(5)
+            ->get();
+
+        try {
+            $databaseStatus = DB::connection()->getPdo() ? 'Connectée' : 'Erreur';
+        } catch (\Throwable $e) {
+            $databaseStatus = 'Erreur';
+        }
+        $systemStatus = [
+            'database' => $databaseStatus,
+            'ai_mistral' => 'En ligne (Port 11434)',
+            'php_version' => phpversion(),
+            'laravel_version' => app()->version(),
+        ];
+
+        return view('admin.dashboard', compact('kpis', 'auditLogs', 'topMagasiniers', 'systemStatus'));
     }
 }

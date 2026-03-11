@@ -25,8 +25,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Routes Admin (protégées par rôle admin)
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/equipe', [\App\Http\Controllers\Admin\AdminEquipeController::class, 'index'])->name('equipe.index');
-    Route::get('/emplacements', fn () => view('admin.emplacements.index'))->name('emplacements.index');
-    Route::get('/parametres', fn () => view('admin.parametres.index'))->name('parametres.index');
+    Route::get('/emplacements', [\App\Http\Controllers\Admin\AdminLocationController::class, 'index'])->name('emplacements.index');
+    Route::get('/parametres', [\App\Http\Controllers\Admin\AdminParametreController::class, 'index'])->name('parametres.index');
+    Route::post('/parametres/transporteurs', [\App\Http\Controllers\Admin\AdminParametreController::class, 'storeTransporteur'])->name('transporteurs.store');
+    Route::delete('/parametres/transporteurs/{id}', [\App\Http\Controllers\Admin\AdminParametreController::class, 'destroyTransporteur'])->name('transporteurs.destroy');
+    Route::post('/system/clear-cache', [\App\Http\Controllers\DashboardController::class, 'clearCache'])->name('clear-cache');
     Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class)->except(['show']);
 });
 
