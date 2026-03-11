@@ -3,9 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/login');
 
 Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)
     ->middleware(['auth', 'verified'])
@@ -20,11 +18,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/assistant', [\App\Http\Controllers\AssistantController::class, 'index'])->name('assistant.index');
     Route::post('/assistant/chat', [\App\Http\Controllers\AssistantController::class, 'chat'])->name('assistant.chat');
     Route::get('/statistiques', [\App\Http\Controllers\StatisticController::class, 'index'])->name('statistiques.index');
+    Route::get('/statistiques/export-csv', [\App\Http\Controllers\StatisticController::class, 'exportCsv'])->name('statistiques.export-csv');
 
-    // Routes Admin
-    Route::get('/admin/equipe', fn () => view('admin.equipe.index'))->name('admin.equipe.index');
-    Route::get('/admin/emplacements', fn () => view('admin.emplacements.index'))->name('admin.emplacements.index');
-    Route::get('/admin/parametres', fn () => view('admin.parametres.index'))->name('admin.parametres.index');
+});
+
+// Routes Admin (protégées par rôle admin)
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/equipe', [\App\Http\Controllers\Admin\AdminEquipeController::class, 'index'])->name('equipe.index');
+    Route::get('/emplacements', fn () => view('admin.emplacements.index'))->name('emplacements.index');
+    Route::get('/parametres', fn () => view('admin.parametres.index'))->name('parametres.index');
+    Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class)->except(['show']);
 });
 
 Route::middleware('auth')->group(function () {

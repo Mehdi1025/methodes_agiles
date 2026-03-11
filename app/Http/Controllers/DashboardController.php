@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
 use App\Models\Colis;
 use App\Models\Emplacement;
 use App\Models\HistoriqueMouvement;
@@ -80,19 +79,25 @@ class DashboardController extends Controller
      */
     protected function adminDashboard(): View
     {
-        $totalUtilisateurs = User::count();
-        $totalClients = Client::count();
-        $totalColisSysteme = Colis::count();
-        $derniersMouvements = HistoriqueMouvement::with(['user', 'colis'])
+        $anomalies = Colis::where('statut', 'retour')
+            ->orWhere(function ($q) {
+                $q->whereNotNull('date_expedition')
+                    ->where('date_expedition', '<', now()->startOfDay())
+                    ->where('statut', '!=', 'livré');
+            })
+            ->count();
+
+        $kpis = [
+            'utilisateurs' => User::count(),
+            'colis' => Colis::count(),
+            'anomalies' => $anomalies,
+        ];
+
+        $auditLogs = HistoriqueMouvement::with(['user', 'colis'])
             ->orderByDesc('date_mouvement')
-            ->limit(5)
+            ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact(
-            'totalUtilisateurs',
-            'totalClients',
-            'totalColisSysteme',
-            'derniersMouvements'
-        ));
+        return view('admin.dashboard', compact('kpis', 'auditLogs'));
     }
 }

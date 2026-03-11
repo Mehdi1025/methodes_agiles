@@ -1,123 +1,123 @@
 <x-app-layout>
-    <div class="space-y-8">
+    <div class="space-y-6 bg-zinc-50 min-h-full -m-6 p-6">
         @if (session('success'))
-            <div class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-800 shadow-sm">
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
                 {{ session('success') }}
             </div>
         @endif
+        @if (session('error'))
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+                {{ session('error') }}
+            </div>
+        @endif
 
-        <!-- En-tête -->
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Panneau d'Administration Central</h1>
-            <p class="mt-1 text-gray-600">Supervision globale de la plateforme</p>
+        <!-- 1. En-tête Vue Globale -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Vue Globale</h1>
+                <p class="mt-1 text-sm text-slate-500">Supervision de l'entrepôt et activité en temps réel</p>
+            </div>
+            <a href="{{ route('admin.equipe.index') }}"
+               class="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Gérer l'équipe
+            </a>
         </div>
 
-        <!-- KPIs (4 cartes - thème corporate indigo/violet) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-xl shadow-md border-l-4 border-l-indigo-500 p-6 hover:shadow-lg transition-shadow duration-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Utilisateurs actifs</p>
-                        <p class="mt-2 text-3xl font-bold text-indigo-600">{{ $totalUtilisateurs }}</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-indigo-50">
-                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- 2. KPIs Système (4 cartes) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                     </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-md border-l-4 border-l-violet-500 p-6 hover:shadow-lg transition-shadow duration-200">
-                <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Clients enregistrés</p>
-                        <p class="mt-2 text-3xl font-bold text-violet-600">{{ $totalClients }}</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-violet-50">
-                        <svg class="w-8 h-8 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                        <p class="text-sm text-slate-500">Employés Actifs</p>
+                        <p class="text-2xl font-semibold tracking-tight text-slate-900">{{ $kpis['utilisateurs'] }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-md border-l-4 border-l-indigo-600 p-6 hover:shadow-lg transition-shadow duration-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Volume Total Traité</p>
-                        <p class="mt-2 text-3xl font-bold text-indigo-700">{{ $totalColisSysteme }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">colis</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-indigo-50">
-                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                     </div>
+                    <div>
+                        <p class="text-sm text-slate-500">Volume Global</p>
+                        <p class="text-2xl font-semibold tracking-tight text-slate-900">{{ number_format($kpis['colis'], 0, ',', ' ') }}</p>
+                        <p class="text-xs text-slate-500">colis gérés</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-md border-l-4 border-l-emerald-500 p-6 hover:shadow-lg transition-shadow duration-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Santé Système</p>
-                        <span class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-sm font-semibold">
-                            <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                            100% Opérationnel
-                        </span>
+            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
                     </div>
-                    <div class="p-3 rounded-lg bg-emerald-50">
-                        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div>
+                        <p class="text-sm text-slate-500">Alertes Critiques</p>
+                        <p class="text-2xl font-semibold tracking-tight {{ $kpis['anomalies'] > 0 ? 'text-rose-600' : 'text-slate-900' }}">{{ $kpis['anomalies'] }}</p>
+                        <p class="text-xs text-rose-600/80">Retards / Retours</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                        <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500">Santé Serveur</p>
+                        <span class="inline-flex items-center gap-1.5 rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                            Base de données connectée, IA en ligne
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Journal d'Audit Récent -->
-        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-violet-50/50">
-                <h3 class="text-lg font-semibold text-gray-800">Journal d'Audit Récent</h3>
-                <p class="text-sm text-gray-500 mt-0.5">Dernières actions enregistrées sur la plateforme</p>
+        <!-- 3. Journal d'Audit (pleine largeur) -->
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-6 py-4">
+                <h3 class="font-semibold tracking-tight text-slate-900">Journal d'Audit en Temps Réel</h3>
+                <p class="mt-0.5 text-sm text-slate-500">Dernières actions enregistrées sur la plateforme</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Employé</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID Colis</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($derniersMouvements as $mouvement)
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {{ $mouvement->date_mouvement?->format('d/m/Y H:i') ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $mouvement->user?->name ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    <span class="text-gray-500">{{ $mouvement->ancien_statut ?? '—' }}</span>
-                                    <span class="mx-1 text-gray-400">→</span>
-                                    <span class="font-medium text-indigo-600">{{ $mouvement->nouveau_statut }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">
-                                    {{ $mouvement->colis ? Str::limit($mouvement->colis->code_qr ?? $mouvement->colis->id, 12) : '-' }}
-                                </td>
-                            </tr>
+            <div class="p-6">
+                <div class="relative">
+                    <div class="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200"></div>
+                    <div class="space-y-0">
+                        @forelse($auditLogs as $log)
+                            <div class="relative flex gap-4 pb-6 last:pb-0">
+                                <div class="relative z-10 mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 bg-white">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-slate-700">
+                                        <span class="text-slate-500">{{ $log->date_mouvement?->diffForHumans() ?? '—' }}</span>
+                                        : <span class="font-medium text-slate-900">{{ $log->user?->name ?? 'N/A' }}</span>
+                                        a passé le colis <span class="font-mono text-slate-600">{{ $log->colis ? Str::limit($log->colis->code_qr ?? $log->colis->id, 10) : '—' }}</span>
+                                        en statut <span class="font-medium text-slate-900">{{ $log->nouveau_statut }}</span>
+                                    </p>
+                                </div>
+                            </div>
                         @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                                    Aucun mouvement enregistré.
-                                </td>
-                            </tr>
+                            <p class="text-sm text-slate-500">Aucun mouvement enregistré.</p>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
