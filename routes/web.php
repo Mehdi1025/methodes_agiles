@@ -17,8 +17,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/scanner', fn () => view('scanner.index'))->name('scanner.index');
     Route::get('/clients', fn () => view('clients.index'))->name('clients.index');
     Route::get('/transporteurs', fn () => view('transporteurs.index'))->name('transporteurs.index');
-    Route::get('/assistant-ia', fn () => view('assistant-ia.index'))->name('assistant-ia.index');
+    Route::get('/assistant', [\App\Http\Controllers\AssistantController::class, 'index'])->name('assistant.index');
+    Route::post('/assistant/chat', [\App\Http\Controllers\AssistantController::class, 'chat'])->name('assistant.chat');
     Route::get('/statistiques', [\App\Http\Controllers\StatisticController::class, 'index'])->name('statistiques.index');
+
+    // Routes Admin
+    Route::get('/admin/equipe', fn () => view('admin.equipe.index'))->name('admin.equipe.index');
+    Route::get('/admin/emplacements', fn () => view('admin.emplacements.index'))->name('admin.emplacements.index');
+    Route::get('/admin/parametres', fn () => view('admin.parametres.index'))->name('admin.parametres.index');
 });
 
 Route::middleware('auth')->group(function () {

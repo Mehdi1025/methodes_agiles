@@ -2,16 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Colis;
 use App\Models\Emplacement;
+use App\Models\HistoriqueMouvement;
+use App\Models\User;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     /**
-     * Affiche le tableau de bord - Centre de commandement logistique.
+     * Affiche le tableau de bord selon le rôle (Admin ou Logistique).
      */
     public function __invoke(): View
+    {
+        if (auth()->user()->role === 'admin') {
+            return $this->adminDashboard();
+        }
+
+        return $this->logistiqueDashboard();
+    }
+
+    /**
+     * Dashboard pour les magasiniers (rôle logistique).
+     */
+    protected function logistiqueDashboard(): View
     {
         $enStock = Colis::where('statut', 'en_stock')->count();
         $enExpedition = Colis::where('statut', 'en_expédition')->count();
@@ -36,7 +51,6 @@ class DashboardController extends Controller
             ->where('statut', '!=', 'livré')
             ->count();
 
-        // Nouvelles variables analytiques
         $totalEmplacements = Emplacement::count();
         $emplacementsOccupes = Emplacement::where('occupe', true)->count();
         $tauxOccupation = $totalEmplacements > 0
@@ -44,22 +58,41 @@ class DashboardController extends Controller
             : 0;
 
         $poidsTotal = (float) Colis::where('statut', 'en_stock')->sum('poids_kg');
-
         $colisFragiles = Colis::where('statut', 'en_stock')->where('fragile', true)->count();
-
         $tauxRetours = Colis::where('statut', 'retour')->count();
 
-        return view('dashboard', [
-            'enStock' => $enStock,
-            'enExpedition' => $enExpedition,
-            'livresMois' => $livresMois,
-            'alertes' => $alertes,
-            'derniersColis' => $derniersColis,
-            'colisFragilesEnRetard' => $colisFragilesEnRetard,
-            'tauxOccupation' => $tauxOccupation,
-            'poidsTotal' => $poidsTotal,
-            'colisFragiles' => $colisFragiles,
-            'tauxRetours' => $tauxRetours,
-        ]);
+        return view('dashboard', compact(
+            'enStock',
+            'enExpedition',
+            'livresMois',
+            'alertes',
+            'derniersColis',
+            'colisFragilesEnRetard',
+            'tauxOccupation',
+            'poidsTotal',
+            'colisFragiles',
+            'tauxRetours'
+        ));
+    }
+
+    /**
+     * Dashboard pour les administrateurs.
+     */
+    protected function adminDashboard(): View
+    {
+        $totalUtilisateurs = User::count();
+        $totalClients = Client::count();
+        $totalColisSysteme = Colis::count();
+        $derniersMouvements = HistoriqueMouvement::with(['user', 'colis'])
+            ->orderByDesc('date_mouvement')
+            ->limit(5)
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'totalUtilisateurs',
+            'totalClients',
+            'totalColisSysteme',
+            'derniersMouvements'
+        ));
     }
 }
