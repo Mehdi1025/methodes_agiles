@@ -38,8 +38,8 @@ Avant de lancer le projet, assurez-vous d'avoir les logiciels suivants installé
 |----------|------------------|
 | **PHP** | 8.2+ |
 | **Composer** | 2.x |
-| **Node.js** | 18+ |
-| **MySQL** ou **MariaDB** | 8.0+ / 10.6+ |
+| **Node.js** | 18+ |//////////////////////////
+| **MySQL** | 8.0+ / 10.6+ |
 | **Ollama** | (pour l'assistant IA) |
 
 ---
@@ -92,7 +92,7 @@ php artisan migrate:fresh --seed
 
 > Cette commande crée toutes les tables et insère les données de test (utilisateurs, clients, transporteurs, emplacements, colis).
 
-### 6️⃣ Installer les dépendances frontend et compiler les assets
+///////////////////////////### 6️⃣ Installer les dépendances frontend et compiler les assets
 
 ```bash
 npm install
