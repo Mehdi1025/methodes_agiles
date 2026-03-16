@@ -1,142 +1,133 @@
-# 📦 Système de Gestion de Colis
+# 📦 Système de Gestion de Stock
 
 ![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php)
-![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat-square&logo=mysql)
+![Docker](https://img.shields.io/badge/Docker-Sail-2496ED?style=flat-square&logo=docker)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=flat-square&logo=tailwind-css)
 
-> **Application intelligente de suivi et gestion de stocks** — Projet universitaire · Méthodes Agiles (Phase 1)
+---
+
+## 📋 Présentation
+
+Application intelligente de **gestion de stock** avec **IA locale** (Ollama / Mistral). Suivi des colis, réception par scanner, quais d'expédition, missions de picking et assistant conversationnel LogisBot — le tout tournant sur votre machine.
+
+> Projet universitaire · Méthodes Agiles
 
 ---
 
-## 📋 Description
+## ⚙️ Prérequis
 
-Le **Système de Gestion de Colis** est un outil centralisant les opérations logistiques d'un entrepôt. Il permet une **traçabilité en temps réel** des colis, de la réception à la livraison, et intègre un **assistant IA embarqué** (Ollama / Mistral) pour optimiser les processus et répondre aux requêtes des opérateurs.
-
-Développé dans le cadre du cours « Méthodes Agiles », ce projet démontre l'application des pratiques agiles en développement logiciel.
-
-**Équipe :** Mahdi · Mohammed · Matteo
+- **Docker Desktop** installé et démarré
+- **WSL2** activé sur Windows (recommandé pour Sail)
 
 ---
 
-## ✨ Fonctionnalités Principales
+## 🚀 Installation rapide (4 étapes)
 
-- **📊 Tableau de bord** — Vue d'ensemble des opérations et indicateurs clés
-- **📦 CRUD Colis** — Création, consultation, modification et suppression des colis
-- **👥 CRUD Clients** — Gestion des clients et de leurs informations de livraison
-- **🚚 CRUD Transporteurs** — Gestion des transporteurs partenaires
-- **📜 Traçabilité & Historique** — Suivi des mouvements et changements de statut en temps réel
-- **🤖 Assistant IA local** — Optimisation et assistance via Ollama / Mistral (LLM embarqué)
-
----
-
-## 🔧 Prérequis
-
-Avant de lancer le projet, assurez-vous d'avoir les logiciels suivants installés sur votre machine :
-
-| Logiciel | Version minimale |
-|----------|------------------|
-| **PHP** | 8.2+ |
-| **Composer** | 2.x |
-| **Node.js** | 18+ |//////////////////////////
-| **MySQL** | 8.0+ / 10.6+ |
-| **Ollama** | (pour l'assistant IA) |
-
----
-
-## 🚀 Installation Locale
-
-Suivez ces étapes pour configurer le projet sur votre machine.
-
-### 1️⃣ Cloner le dépôt
+### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/Mehdi1025/methodes_agiles.git
-cd methodes_agiles
+git clone <url-du-repo> methode_agile
+cd methode_agile
 ```
 
-### 2️⃣ Installer les dépendances PHP
-
-```bash
-composer install
-```
-
-### 3️⃣ Configurer l'environnement
+### 2. Créer le fichier d'environnement
 
 ```bash
 cp .env.example .env
 ```
 
-Ouvrez le fichier `.env` et configurez vos accès à la base de données :
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=methodes_agiles
-DB_USERNAME=votre_utilisateur
-DB_PASSWORD=votre_mot_de_passe
-```
-
-### 4️⃣ Générer la clé d'application
+### 3. Installer Sail (première fois uniquement)
 
 ```bash
-php artisan key:generate
+docker run --rm -v $(pwd):/var/www/html -w /var/www/html laravelsail/php83-composer:latest composer install
 ```
 
-### 5️⃣ Créer la base de données et la peupler
+### 4. Lancer les containers
 
 ```bash
-php artisan migrate:fresh --seed
+./vendor/bin/sail up -d
 ```
-
-> Cette commande crée toutes les tables et insère les données de test (utilisateurs, clients, transporteurs, emplacements, colis).
-
-///////////////////////////### 6️⃣ Installer les dépendances frontend et compiler les assets
-
-```bash
-npm install
-npm run dev
-```
-
-> Gardez `npm run dev` actif dans un terminal pour le hot-reload des assets.
-
-### 7️⃣ Lancer le serveur Laravel
-
-Dans un **nouveau terminal** :
-
-```bash
-php artisan serve
-```
-
-L'application sera accessible à l'adresse : **http://localhost:8000**
 
 ---
 
-## 👤 Comptes de test (Seeders)
+## 🤖 Configuration IA (Ollama)
 
-Les identifiants suivants sont générés par défaut pour tester l'application :
+L'assistant LogisBot utilise **Ollama** en local. Pour l'activer :
+
+1. **Installez et lancez Ollama** sur Windows : [ollama.ai](https://ollama.ai)
+2. Installez le modèle Mistral : `ollama pull mistral`
+3. L'URL `http://host.docker.internal:11434` est déjà configurée dans `.env.example` — le container Sail communique ainsi avec Ollama sur votre machine Windows.
+
+Aucune modification nécessaire si vous utilisez le `.env` par défaut.
+
+---
+
+## 🗄️ Base de données
+
+Pour créer les tables et charger les **50 données de test** (colis, clients, transporteurs, emplacements) :
+
+```bash
+./vendor/bin/sail artisan migrate --seed
+```
+
+Pour repartir de zéro (réinitialisation complète) :
+
+```bash
+./vendor/bin/sail artisan migrate:fresh --seed
+```
+
+---
+
+## 🌐 Accès
+
+| Service | URL / Port |
+|---------|------------|
+| **Application** | [http://localhost](http://localhost) |
+| **Base de données MySQL** | `localhost:3308` (ou `3306` selon `FORWARD_DB_PORT`) |
+
+---
+
+## 👤 Comptes de test
 
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
 | **Admin** | `admin@entrepots.com` | `password` |
+| **Magasinier** | `magasinier@entrepots.com` | `password` |
 | **Logistique 1** | `logistique1@entrepots.com` | `password` |
 | **Logistique 2** | `logistique2@entrepots.com` | `password` |
 
 ---
 
-## 🏗️ Architecture
+## ✨ Fonctionnalités
 
-L'application suit le **pattern MVC** (Model-View-Controller) de Laravel :
-
-- **Models** — Entités métier (Client, Colis, Transporteur, Emplacement, HistoriqueMouvement)
-- **Views** — Interfaces utilisateur (Blade + Tailwind CSS)
-- **Controllers** — Logique applicative et orchestration des requêtes
-
-La base de données utilise des **UUIDs** pour les clés primaires des principales entités, garantissant unicité et traçabilité.
+- **📊 Tableau de bord** — Vue d'ensemble et indicateurs clés
+- **📦 Colis** — Gestion complète avec Smart Scanner (réception par code-barres)
+- **🚚 Quais d'Expédition** — Validation des départs par transporteur
+- **📋 Pick & Pack** — Missions de picking avec signalement d'anomalies
+- **⌘ Command Palette** — Recherche rapide (Ctrl+K) pour les magasiniers
+- **🤖 Assistant IA** — LogisBot avec données temps réel (Ollama / Mistral)
 
 ---
 
-## 📄 Licence
+## 🛠️ Commandes utiles
 
-Projet universitaire — Méthodes Agiles (Phase 1)
+```bash
+# Arrêter les containers
+./vendor/bin/sail down
+
+# Relancer les containers
+./vendor/bin/sail up -d
+
+# Voir les logs
+./vendor/bin/sail logs -f
+
+# Accéder au shell du container
+./vendor/bin/sail shell
+```
+
+---
+
+## 🏗️ Équipe
+
+Mahdi · Mohammed · Matteo — Méthodes Agiles (Phase 1)

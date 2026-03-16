@@ -7,29 +7,35 @@ use Illuminate\Support\Facades\Log;
 
 class OllamaService
 {
-    protected string $baseUrl = 'http://127.0.0.1:11434';
+    protected string $baseUrl;
+
+    public function __construct()
+    {
+        $this->baseUrl = config('services.ollama.url', 'http://host.docker.internal:11434');
+    }
 
     protected string $model = 'mistral';
 
-    protected string $systemPrompt = 'Tu es un assistant logistique expert. Tu dois IMPÉRATIVEMENT répondre en FRANÇAIS. Tes réponses doivent être chirurgicales, concises et ultra-courtes (2 phrases maximum). Ne fais jamais de longues listes.';
+    protected string $defaultSystemPrompt = 'Tu es un assistant logistique expert. Tu dois IMPÉRATIVEMENT répondre en FRANÇAIS. Tes réponses doivent être chirurgicales, concises et ultra-courtes (2 phrases maximum). Ne fais jamais de longues listes.';
 
     /**
      * Envoie une question à l'IA Ollama et retourne la réponse.
      *
      * @param  array<string, mixed>  $context
      */
-    public function ask(string $prompt, array $context = []): string
+    public function ask(string $prompt, array $context = [], ?string $systemPrompt = null): string
     {
         set_time_limit(300);
 
         $fullPrompt = $this->buildPrompt($prompt, $context);
+        $system = $systemPrompt ?? $this->defaultSystemPrompt;
 
         try {
             $response = Http::timeout(300)
                 ->post("{$this->baseUrl}/api/generate", [
                     'model' => $this->model,
                     'prompt' => $fullPrompt,
-                    'system' => $this->systemPrompt,
+                    'system' => $system,
                     'stream' => false,
                     'options' => [
                         'num_predict' => 100,

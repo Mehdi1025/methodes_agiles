@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,9 +13,9 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="flex h-screen bg-gray-50 overflow-hidden">
+        <div class="flex h-screen bg-gray-50 dark:bg-zinc-950 overflow-hidden transition-colors duration-300">
             <!-- Sidebar fixe (gauche) -->
-            <aside class="w-64 shrink-0 flex flex-col bg-slate-900 text-white">
+            <aside class="w-64 shrink-0 flex flex-col bg-slate-900 dark:bg-zinc-950 text-white border-r border-slate-700/50 dark:border-zinc-800 transition-colors duration-300">
                 <div class="p-6 border-b border-slate-700/50">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
                         <span class="text-2xl">📦</span>
@@ -79,11 +79,18 @@
                             <p class="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Gestion</p>
                             <div class="space-y-0.5">
                                 <a href="{{ route('colis.index') }}"
-                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('colis.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('colis.index') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
                                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
                                     Colis
+                                </a>
+                                <a href="{{ route('magasinier.colis.scanner') }}"
+                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('magasinier.colis.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                    </svg>
+                                    Smart Scanner
                                 </a>
                                 <a href="{{ route('clients.index') }}"
                                    class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('clients.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
@@ -92,12 +99,19 @@
                                     </svg>
                                     Clients
                                 </a>
-                                <a href="{{ route('transporteurs.index') }}"
-                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('transporteurs.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                                <a href="{{ route('magasinier.expeditions.index') }}"
+                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('magasinier.expeditions.*') ? 'bg-slate-800 text-teal-400 border-l-2 border-indigo-500 -ml-0.5 pl-[15px]' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
                                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                                     </svg>
-                                    Transporteurs
+                                    <span class="font-medium">Quais d'Expédition</span>
+                                </a>
+                                <a href="{{ route('magasinier.picking.index') }}"
+                                   class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('magasinier.picking.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                    </svg>
+                                    Pick & Pack
                                 </a>
                             </div>
                         </div>
@@ -133,10 +147,20 @@
             <!-- Main Content (droite) -->
             <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <!-- Header blanc -->
-                <header class="h-16 shrink-0 bg-white shadow-sm flex items-center justify-between px-6">
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-600">Bienvenue,</span>
-                        <span class="font-semibold text-gray-900">{{ Auth::user()->name }}</span>
+                <header class="h-16 shrink-0 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between px-6 gap-4 border-b border-gray-100 dark:border-zinc-800 transition-colors duration-300">
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        @if(auth()->user()->role !== 'admin')
+                        <button type="button" onclick="openCommandPalette()" class="flex items-center gap-3 flex-1 max-w-xl px-4 py-2.5 text-left bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700 transition-all group">
+                            <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-sm truncate flex-1">Rechercher ou lancer une commande...</span>
+                            <kbd class="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 text-[10px] font-sans text-zinc-500 dark:text-zinc-400 rounded border border-zinc-300 dark:border-zinc-600">Ctrl</kbd>
+                            <kbd class="hidden sm:flex items-center justify-center min-w-[18px] h-5 px-1 bg-zinc-200 dark:bg-zinc-700 text-[10px] font-sans text-zinc-500 dark:text-zinc-400 rounded border border-zinc-300 dark:border-zinc-600">K</kbd>
+                        </button>
+                        @endif
+                        <span class="text-gray-600 dark:text-zinc-400 shrink-0">Bienvenue,</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ Auth::user()->name }}</span>
                         @if(auth()->user()->role === 'admin')
                             <span class="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded">Admin</span>
                         @endif
@@ -154,10 +178,179 @@
                 </header>
 
                 <!-- Zone de contenu -->
-                <main class="flex-1 overflow-y-auto p-6">
+                <main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-zinc-950 transition-colors duration-300">
                     {{ $slot }}
                 </main>
             </div>
         </div>
+
+        @if(auth()->user()->role !== 'admin')
+        {{-- Bouton flottant Command Palette (bas droite) --}}
+        <div class="fixed bottom-6 right-6 z-40 hidden md:block">
+            <button type="button" onclick="openCommandPalette()" class="command-palette-trigger flex items-center gap-3 px-3 py-2 bg-zinc-900/50 dark:bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl hover:bg-zinc-800/90 transition-all duration-300 group shadow-2xl max-w-[95px] hover:max-w-[320px] overflow-hidden" title="Rechercher ou lancer une commande... (Ctrl+K)">
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <kbd class="min-w-[20px] h-5 flex items-center justify-center bg-zinc-700 text-[10px] font-sans text-zinc-300 rounded border border-zinc-500 shadow-sm">Ctrl</kbd>
+                    <span class="text-zinc-500 text-xs">+</span>
+                    <kbd class="min-w-[20px] h-5 flex items-center justify-center bg-zinc-700 text-[10px] font-sans text-zinc-300 rounded border border-zinc-500 shadow-sm">K</kbd>
+                </div>
+                <div class="h-4 w-[1px] bg-white/10 shrink-0"></div>
+                <span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-100 transition-colors whitespace-nowrap min-w-0 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300">Rechercher ou lancer une commande...</span>
+            </button>
+        </div>
+        {{-- Barre de Commande Magique (Command Palette) - Magasinier uniquement --}}
+        <div id="command-palette-backdrop" class="fixed inset-0 z-40 hidden opacity-0 bg-black/40 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"></div>
+        <div id="command-palette" class="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 hidden opacity-0 transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-none" style="transition-property: opacity;">
+            <div id="command-palette-content" class="w-full max-w-2xl backdrop-blur-xl bg-zinc-900/80 border border-white/10 rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden transform transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] scale-95 origin-top pointer-events-auto" style="transition-property: transform, opacity;">
+                <div class="p-4 border-b border-white/5">
+                    <input type="text"
+                           id="command-palette-input"
+                           class="w-full bg-transparent text-white text-xl font-medium placeholder-zinc-500 border-none outline-none focus:ring-0"
+                           placeholder="Tapez une commande ou une référence..."
+                           autocomplete="off"
+                           spellcheck="false">
+                </div>
+                <div id="command-palette-results" class="max-h-[min(60vh,400px)] overflow-y-auto py-2">
+                    {{-- Résultats injectés par JS --}}
+                </div>
+                <div class="px-4 py-2 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500">
+                    <span>↑↓ Naviguer</span>
+                    <span>↵ Valider</span>
+                    <span>Esc Fermer</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function() {
+                const palette = document.getElementById('command-palette');
+                const backdrop = document.getElementById('command-palette-backdrop');
+                const input = document.getElementById('command-palette-input');
+                const resultsContainer = document.getElementById('command-palette-results');
+                const content = document.getElementById('command-palette-content');
+
+                const baseActions = [
+                    { id: 'scan', label: 'Nouveau Scan', icon: '📦', url: @json(route('magasinier.colis.scanner')), keywords: 'scan scanner réception' },
+                    { id: 'quais', label: 'Voir les Quais', icon: '🚚', url: @json(route('magasinier.expeditions.index')), keywords: 'quais expédition transport' },
+                    { id: 'picking', label: 'Mission Picking', icon: '📋', url: @json(route('magasinier.picking.index')), keywords: 'picking mission préparation' },
+                    { id: 'theme', label: 'Mode Nuit', icon: '🌙', action: 'toggleTheme', keywords: 'nuit dark thème' },
+                    { id: 'search', label: 'Chercher un colis...', icon: '🔍', action: 'searchColis', keywords: 'chercher colis recherche' }
+                ];
+
+                const colisIndexUrl = @json(route('colis.index'));
+
+                function getFilteredActions(query) {
+                    const q = (query || '').trim().toLowerCase();
+                    let actions = [...baseActions];
+
+                    if (q.length >= 2) {
+                        actions.unshift({
+                            id: 'search-ref',
+                            label: `Chercher "${q}"`,
+                            icon: '🔍',
+                            url: colisIndexUrl + '?q=' + encodeURIComponent(q),
+                            keywords: q
+                        });
+                    }
+
+                    if (!q) return actions;
+                    return actions.filter(a => {
+                        const text = (a.label + ' ' + (a.keywords || '')).toLowerCase();
+                        return text.includes(q);
+                    });
+                }
+
+                function renderResults(actions, selectedIndex = 0) {
+                    resultsContainer.innerHTML = actions.map((action, i) => {
+                        const isSelected = i === selectedIndex;
+                        const url = action.url || '#';
+                        const clickHandler = action.action
+                            ? `onclick="event.preventDefault(); runAction('${action.action}'); closeCommandPalette();"`
+                            : `onclick="closeCommandPalette();"`;
+                        return `
+                            <a href="${url}" ${clickHandler} data-index="${i}"
+                               class="command-item flex items-center gap-4 px-4 py-3 text-left transition-colors cursor-pointer ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-300 hover:bg-white/5'}">
+                                <span class="text-2xl">${action.icon}</span>
+                                <span class="font-medium">${action.label}</span>
+                            </a>
+                        `;
+                    }).join('');
+                }
+
+                function runAction(actionName) {
+                    if (actionName === 'toggleTheme') {
+                        const html = document.documentElement;
+                        const isDark = html.classList.toggle('dark');
+                        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    } else if (actionName === 'searchColis') {
+                        window.location.href = colisIndexUrl;
+                    }
+                }
+
+                function openCommandPalette() {
+                    backdrop.classList.remove('hidden');
+                    palette.classList.remove('hidden', 'pointer-events-none');
+                    input.value = '';
+                    input.focus();
+                    updateResults();
+                    requestAnimationFrame(() => {
+                        backdrop.classList.remove('opacity-0');
+                        palette.classList.remove('opacity-0');
+                        content.classList.remove('scale-95');
+                        content.classList.add('scale-100');
+                    });
+                }
+
+                function closeCommandPalette() {
+                    backdrop.classList.add('opacity-0');
+                    palette.classList.add('opacity-0');
+                    content.classList.remove('scale-100');
+                    content.classList.add('scale-95');
+                    setTimeout(() => {
+                        backdrop.classList.add('hidden');
+                        palette.classList.add('hidden', 'pointer-events-none');
+                    }, 250);
+                }
+
+                let selectedIndex = 0;
+                let currentActions = [];
+
+                function updateResults() {
+                    currentActions = getFilteredActions(input.value);
+                    selectedIndex = Math.min(selectedIndex, Math.max(0, currentActions.length - 1));
+                    renderResults(currentActions, selectedIndex);
+                    const selected = resultsContainer.querySelector('.command-item[data-index="' + selectedIndex + '"]');
+                    if (selected) selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+
+                input.addEventListener('input', () => { selectedIndex = 0; updateResults(); });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown') { e.preventDefault(); selectedIndex = Math.min(selectedIndex + 1, currentActions.length - 1); updateResults(); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIndex = Math.max(selectedIndex - 1, 0); updateResults(); }
+                    else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const action = currentActions[selectedIndex];
+                        if (action) {
+                            closeCommandPalette();
+                            if (action.action) runAction(action.action);
+                            else if (action.url) window.location.href = action.url;
+                        }
+                    }
+                });
+
+                palette.addEventListener('click', (e) => { if (e.target === palette) closeCommandPalette(); });
+                backdrop.addEventListener('click', closeCommandPalette);
+
+                document.addEventListener('keydown', (e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCommandPalette(); }
+                    if (e.key === 'Escape') closeCommandPalette();
+                });
+
+                window.openCommandPalette = openCommandPalette;
+                window.closeCommandPalette = closeCommandPalette;
+
+                if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+            })();
+        </script>
+        @endif
     </body>
 </html>
