@@ -11,7 +11,7 @@ Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/colis', fn () => view('colis.index'))->name('colis.index');
+    Route::resource('colis', ColisController::class); // Déclaration correcte de la ressource
     Route::get('/colis/scanner', [\App\Http\Controllers\Magasinier\ReceptionController::class, 'index'])->name('magasinier.colis.scanner');
     Route::post('/colis/scan', [\App\Http\Controllers\Magasinier\ReceptionController::class, 'scan'])->name('magasinier.colis.scan');
     Route::get('/expeditions', [\App\Http\Controllers\Magasinier\ExpeditionController::class, 'index'])->name('magasinier.expeditions.index');
@@ -19,7 +19,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/picking', [\App\Http\Controllers\Magasinier\PickingController::class, 'index'])->name('magasinier.picking.index');
     Route::post('/picking/{colis}/pick', [\App\Http\Controllers\Magasinier\PickingController::class, 'pick'])->name('magasinier.picking.pick');
     Route::post('/picking/{colis}/anomalie', [\App\Http\Controllers\Magasinier\PickingController::class, 'reportAnomaly'])->name('magasinier.picking.anomalie');
-    Route::get('/colis/create', fn () => redirect()->route('colis.index'))->name('colis.create');
     Route::get('/scanner', fn () => view('scanner.index'))->name('scanner.index');
     Route::get('/clients', fn () => view('clients.index'))->name('clients.index');
     Route::get('/transporteurs', fn () => view('transporteurs.index'))->name('transporteurs.index');
@@ -27,7 +26,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/assistant/chat', [\App\Http\Controllers\AssistantController::class, 'chat'])->name('assistant.chat');
     Route::get('/statistiques', [\App\Http\Controllers\StatisticController::class, 'index'])->name('statistiques.index');
     Route::get('/statistiques/export-csv', [\App\Http\Controllers\StatisticController::class, 'exportCsv'])->name('statistiques.export-csv');
-
 });
 
 // Routes Admin (protégées par rôle admin)
@@ -48,3 +46,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+

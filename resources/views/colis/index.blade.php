@@ -65,7 +65,7 @@
                                     {{ ucfirst($colisItem['statut']) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $colisItem['date'] }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ $colisItem['date_reception'] }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <a href="{{ route('colis.show', $colisItem['id']) }}" class="text-blue-600 hover:underline mr-2">Voir</a>
                                 <a href="{{ route('colis.edit', $colisItem['id']) }}" class="text-yellow-600 hover:underline mr-2">Modifier</a>
