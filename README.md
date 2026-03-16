@@ -1,37 +1,90 @@
-# 📦 Système de Gestion de Colis
+# 📦 Système de Gestion de Stock
 
 ![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php)
 ![Docker](https://img.shields.io/badge/Docker-Sail-2496ED?style=flat-square&logo=docker)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=flat-square&logo=tailwind-css)
 
-> **Application intelligente de suivi et gestion de stocks** — Projet universitaire · Méthodes Agiles
+---
+
+## 📋 Présentation
+
+Application intelligente de **gestion de stock** avec **IA locale** (Ollama / Mistral). Suivi des colis, réception par scanner, quais d'expédition, missions de picking et assistant conversationnel LogisBot — le tout tournant sur votre machine.
+
+> Projet universitaire · Méthodes Agiles
 
 ---
 
-## 🚀 Installation en une commande (Docker Sail)
+## ⚙️ Prérequis
 
-**Prérequis :** Docker Desktop installé et démarré.
+- **Docker Desktop** installé et démarré
+- **WSL2** activé sur Windows (recommandé pour Sail)
 
-> ⚠️ **Première fois ?** Si `docker-compose.yml` n'existe pas, exécutez d'abord :
-> ```bash
-> ./vendor/bin/sail artisan sail:install
-> ```
-> (Choisissez MySQL, Redis si souhaité, puis validez les options par défaut)
+---
+
+## 🚀 Installation rapide (4 étapes)
+
+### 1. Cloner le projet
 
 ```bash
-bash start.sh
+git clone <url-du-repo> methode_agile
+cd methode_agile
 ```
 
-C'est tout. Le script va :
+### 2. Créer le fichier d'environnement
 
-1. 🐳 Lancer les containers Sail
-2. 📦 Installer les dépendances PHP (Composer)
-3. 🔑 Générer la clé d'application
-4. 🗄️ Créer les tables et insérer les données de test
-5. 🎨 Compiler les assets (npm install + build)
+```bash
+cp .env.example .env
+```
 
-**L'application sera accessible sur :** [http://localhost](http://localhost)
+### 3. Installer Sail (première fois uniquement)
+
+```bash
+docker run --rm -v $(pwd):/var/www/html -w /var/www/html laravelsail/php83-composer:latest composer install
+```
+
+### 4. Lancer les containers
+
+```bash
+./vendor/bin/sail up -d
+```
+
+---
+
+## 🤖 Configuration IA (Ollama)
+
+L'assistant LogisBot utilise **Ollama** en local. Pour l'activer :
+
+1. **Installez et lancez Ollama** sur Windows : [ollama.ai](https://ollama.ai)
+2. Installez le modèle Mistral : `ollama pull mistral`
+3. L'URL `http://host.docker.internal:11434` est déjà configurée dans `.env.example` — le container Sail communique ainsi avec Ollama sur votre machine Windows.
+
+Aucune modification nécessaire si vous utilisez le `.env` par défaut.
+
+---
+
+## 🗄️ Base de données
+
+Pour créer les tables et charger les **50 données de test** (colis, clients, transporteurs, emplacements) :
+
+```bash
+./vendor/bin/sail artisan migrate --seed
+```
+
+Pour repartir de zéro (réinitialisation complète) :
+
+```bash
+./vendor/bin/sail artisan migrate:fresh --seed
+```
+
+---
+
+## 🌐 Accès
+
+| Service | URL / Port |
+|---------|------------|
+| **Application** | [http://localhost](http://localhost) |
+| **Base de données MySQL** | `localhost:3308` (ou `3306` selon `FORWARD_DB_PORT`) |
 
 ---
 
@@ -72,22 +125,6 @@ C'est tout. Le script va :
 # Accéder au shell du container
 ./vendor/bin/sail shell
 ```
-
----
-
-## 📋 Configuration .env (Sail)
-
-Le fichier `.env.example` est préconfiguré pour Docker Sail :
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_USERNAME=sail
-DB_PASSWORD=password
-DB_DATABASE=methode_agile
-```
-
-Pour une installation **sans Docker**, modifiez `DB_HOST=127.0.0.1` et vos identifiants MySQL.
 
 ---
 
