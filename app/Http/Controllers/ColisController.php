@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Colis;
 use App\Models\Client;
+use App\Models\Transporteur; // Ajout du modèle Transporteur
+use App\Models\Emplacement; // Ajout du modèle Emplacement
 
 class ColisController extends Controller
 {
@@ -24,7 +26,9 @@ class ColisController extends Controller
     public function create()
     {
         $clients = Client::orderBy('nom')->get();
-        return view('colis.create', compact('clients'));
+        $transporteurs = Transporteur::orderBy('nom')->get(); // Fetch transporters
+        $emplacements = Emplacement::orderBy('zone')->get(); // Fetch locations
+        return view('colis.create', compact('clients', 'transporteurs', 'emplacements'));
     }
 
     public function store(Request $request)
@@ -33,16 +37,25 @@ class ColisController extends Controller
             'client_id' => 'required|exists:clients,id',
             'statut' => 'required|string|max:255',
             'date_reception' => 'required|date',
+            'description' => 'nullable|string', // Description n'est plus obligatoire
+            'poids_kg' => 'nullable|numeric',
+            'dimensions' => 'nullable|string',
+            'fragile' => 'nullable|boolean',
+            'date_expedition' => 'nullable|date',
+            'transporteur_id' => 'nullable|exists:transporteurs,id',
+            'emplacement_id' => 'nullable|exists:emplacements,id',
         ]);
+
         $colis = new Colis();
         $colis->client_id = $validated['client_id'];
         $colis->statut = $validated['statut'];
         $colis->date_reception = $validated['date_reception'];
-        $colis->description = $request->input('description', '');
+        $colis->description = $request->input('description', ''); // Valeur par défaut vide
         $colis->poids_kg = $request->input('poids_kg', 0);
         $colis->dimensions = $request->input('dimensions', '');
         $colis->fragile = $request->input('fragile', false);
         $colis->save();
+
         return redirect()->route('colis.index');
     }
 
@@ -50,7 +63,9 @@ class ColisController extends Controller
     {
         $colis = Colis::findOrFail($id);
         $clients = Client::orderBy('nom')->get();
-        return view('colis.edit', compact('colis', 'clients'));
+        $transporteurs = Transporteur::orderBy('nom')->get(); // Récupération des transporteurs
+        $emplacements = Emplacement::orderBy('zone')->get(); // Récupération des emplacements
+        return view('colis.edit', compact('colis', 'clients', 'transporteurs', 'emplacements'));
     }
 
     public function update(Request $request, $id)
@@ -59,23 +74,26 @@ class ColisController extends Controller
             'client_id' => 'required|exists:clients,id',
             'statut' => 'required|string|max:255',
             'date_reception' => 'required|date',
+            'description' => 'nullable|string',
+            'poids_kg' => 'nullable|numeric',
+            'dimensions' => 'nullable|string',
+            'fragile' => 'nullable|boolean',
+            'date_expedition' => 'nullable|date',
+            'transporteur_id' => 'nullable|exists:transporteurs,id',
+            'emplacement_id' => 'nullable|exists:emplacements,id',
         ]);
+
         $colis = Colis::findOrFail($id);
-        $colis->client_id = $validated['client_id'];
-        $colis->statut = $validated['statut'];
-        $colis->date_reception = $validated['date_reception'];
-        $colis->description = $request->input('description', $colis->description);
-        $colis->poids_kg = $request->input('poids_kg', $colis->poids_kg);
-        $colis->dimensions = $request->input('dimensions', $colis->dimensions);
-        $colis->fragile = $request->input('fragile', $colis->fragile);
-        $colis->save();
-        return redirect()->route('colis.index');
+        $colis->update($validated);
+
+        return redirect()->route('colis.show', $colis->id)->with('success', 'Colis mis à jour avec succès.');
     }
 
     public function destroy($id)
     {
         $colis = Colis::findOrFail($id);
         $colis->delete();
-        return redirect()->route('colis.index');
+
+        return redirect()->route('colis.index')->with('success', 'Colis supprimé avec succès.');
     }
 }
