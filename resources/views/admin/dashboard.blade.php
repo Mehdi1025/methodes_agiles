@@ -14,6 +14,18 @@
             </div>
         @endif
 
+        {{-- Showcase Toggle (caché en mode Kiosk) --}}
+        <div class="kiosk-hide mb-6 flex items-center justify-end">
+            <div class="inline-flex items-center rounded-lg border border-slate-200 bg-slate-200/50 p-1 relative z-10">
+                <button type="button" onclick="switchDashboardMode('standard')" id="btn-mode-standard"
+                    class="rounded-md px-4 py-1.5 text-sm font-medium text-slate-500 transition-all duration-200 hover:text-slate-700">🎓 Mode Requis (École)</button>
+                <button type="button" onclick="switchDashboardMode('advanced')" id="btn-mode-advanced"
+                    class="rounded-md bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 shadow-sm ring-1 ring-slate-900/5 transition-all duration-200">🚀 Mode Avancé (Pro)</button>
+            </div>
+        </div>
+
+        {{-- Mode Avancé (Pro) --}}
+        <div id="dashboard-advanced" class="block transition-opacity duration-300">
         <!-- 1. En-tête Vue Globale -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -271,6 +283,49 @@
                 <span class="mx-4">🟢 PRÊT POUR L'EXPÉDITION</span>
             </div>
         </div>
+        </div>{{-- /#dashboard-advanced --}}
+
+        {{-- Mode Standard (Cahier des charges école) --}}
+        <div id="dashboard-standard" class="hidden transition-opacity duration-300">
+            <h2 class="mb-6 text-xl font-semibold text-slate-900">Tableau de bord administrateur</h2>
+            <div class="mb-6 grid grid-cols-2 gap-4">
+                <div class="rounded border border-slate-200 bg-white p-4">
+                    <p class="text-sm text-slate-600">Total Colis</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ number_format($kpis['colis'] ?? 0, 0, ',', ' ') }}</p>
+                </div>
+                <div class="rounded border border-slate-200 bg-white p-4">
+                    <p class="text-sm text-slate-600">Anomalies</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ $kpis['anomalies'] ?? 0 }}</p>
+                </div>
+            </div>
+            <div class="rounded border border-slate-200 bg-white">
+                <h3 class="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">Derniers mouvements</h3>
+                <table class="w-full table-auto border-collapse text-left">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50">
+                            <th class="px-4 py-2 text-sm font-medium text-slate-700">Date</th>
+                            <th class="px-4 py-2 text-sm font-medium text-slate-700">Utilisateur</th>
+                            <th class="px-4 py-2 text-sm font-medium text-slate-700">Colis</th>
+                            <th class="px-4 py-2 text-sm font-medium text-slate-700">Nouveau statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($auditLogs->take(5) as $log)
+                            <tr class="border-b border-slate-100">
+                                <td class="px-4 py-2 text-sm text-slate-900">{{ $log->date_mouvement?->format('d/m/Y H:i') ?? '—' }}</td>
+                                <td class="px-4 py-2 text-sm text-slate-900">{{ $log->user?->name ?? 'N/A' }}</td>
+                                <td class="px-4 py-2 text-sm text-slate-900">{{ $log->colis ? ($log->colis->code_qr ?? $log->colis->id) : '—' }}</td>
+                                <td class="px-4 py-2 text-sm text-slate-900">{{ $log->nouveau_statut }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Aucun mouvement enregistré.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -347,6 +402,35 @@
             if (!document.fullscreenElement) {
                 document.body.classList.remove('kiosk-active');
             }
+        });
+
+        function switchDashboardMode(mode) {
+            const advContainer = document.getElementById('dashboard-advanced');
+            const stdContainer = document.getElementById('dashboard-standard');
+            const btnAdv = document.getElementById('btn-mode-advanced');
+            const btnStd = document.getElementById('btn-mode-standard');
+
+            if (mode === 'standard') {
+                advContainer.classList.add('hidden');
+                stdContainer.classList.remove('hidden');
+                btnStd.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'ring-1', 'ring-slate-900/5');
+                btnStd.classList.remove('text-slate-500', 'hover:text-slate-700');
+                btnAdv.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm', 'ring-1', 'ring-slate-900/5');
+                btnAdv.classList.add('text-slate-500', 'hover:text-slate-700');
+            } else {
+                stdContainer.classList.add('hidden');
+                advContainer.classList.remove('hidden');
+                btnAdv.classList.add('bg-white', 'text-indigo-600', 'shadow-sm', 'ring-1', 'ring-slate-900/5');
+                btnAdv.classList.remove('text-slate-500', 'hover:text-slate-700');
+                btnStd.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'ring-1', 'ring-slate-900/5');
+                btnStd.classList.add('text-slate-500', 'hover:text-slate-700');
+            }
+            localStorage.setItem('dashboardMode', mode);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedMode = localStorage.getItem('dashboardMode') || 'advanced';
+            switchDashboardMode(savedMode);
         });
     </script>
 </x-app-layout>

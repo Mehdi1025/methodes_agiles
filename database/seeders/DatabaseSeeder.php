@@ -48,6 +48,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        $magasinier = User::factory()->create([
+            'name' => 'Magasinier',
+            'email' => 'magasinier@entrepots.com',
+            'password' => Hash::make('password'),
+            'role' => 'logistique',
+        ]);
+
         $logistique1 = User::factory()->create([
             'name' => 'Logistique 1',
             'email' => 'logistique1@entrepots.com',
@@ -62,7 +69,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'logistique',
         ]);
 
-        $utilisateursLogistique = [$logistique1, $logistique2];
+        $utilisateursLogistique = [$magasinier, $logistique1, $logistique2];
 
         // 2. Clients
         $clients = Client::factory(15)->create();
@@ -77,14 +84,15 @@ class DatabaseSeeder extends Seeder
         // 4. Emplacements
         $emplacements = Emplacement::factory(50)->create();
 
-        // 5. Colis avec logique métier
+        // 5. Colis avec logique métier (statuts variés pour les testeurs)
+        $statutsPossibles = ['reçu', 'en_stock', 'en_preparation', 'en_expédition', 'livré', 'retour', 'anomalie'];
         for ($i = 0; $i < 50; $i++) {
-            $statut = fake()->randomElement(['reçu', 'en_stock', 'en_expédition', 'livré', 'retour']);
+            $statut = fake()->randomElement($statutsPossibles);
             $dateReception = fake()->dateTimeBetween('-30 days', 'now');
             $dateExpedition = $this->getDateExpeditionLogique($statut, $dateReception);
 
             $emplacementId = null;
-            if ($statut === 'en_stock') {
+            if (in_array($statut, ['en_stock', 'en_preparation'])) {
                 $emplacementDisponible = $emplacements->first(fn (Emplacement $e) => ! $e->occupe);
                 if ($emplacementDisponible) {
                     $emplacementId = $emplacementDisponible->id;
@@ -143,7 +151,7 @@ class DatabaseSeeder extends Seeder
         return match ($statut) {
             'livré', 'en_expédition' => fake()->dateTimeBetween($dateReception, 'now'),
             'retour' => fake()->optional(0.7)->dateTimeBetween($dateReception, 'now'),
-            'en_stock', 'reçu' => fake()->optional(0.3)->dateTimeBetween('now', '+14 days'),
+            'en_stock', 'reçu', 'en_preparation', 'anomalie' => fake()->optional(0.3)->dateTimeBetween('now', '+14 days'),
             default => null,
         };
     }

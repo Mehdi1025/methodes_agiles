@@ -11,6 +11,13 @@ Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/colis', fn () => view('colis.index'))->name('colis.index');
+    Route::get('/colis/scanner', [\App\Http\Controllers\Magasinier\ReceptionController::class, 'index'])->name('magasinier.colis.scanner');
+    Route::post('/colis/scan', [\App\Http\Controllers\Magasinier\ReceptionController::class, 'scan'])->name('magasinier.colis.scan');
+    Route::get('/expeditions', [\App\Http\Controllers\Magasinier\ExpeditionController::class, 'index'])->name('magasinier.expeditions.index');
+    Route::post('/expeditions/{transporteur}/dispatch', [\App\Http\Controllers\Magasinier\ExpeditionController::class, 'dispatch'])->name('magasinier.expeditions.dispatch');
+    Route::get('/picking', [\App\Http\Controllers\Magasinier\PickingController::class, 'index'])->name('magasinier.picking.index');
+    Route::post('/picking/{colis}/pick', [\App\Http\Controllers\Magasinier\PickingController::class, 'pick'])->name('magasinier.picking.pick');
+    Route::post('/picking/{colis}/anomalie', [\App\Http\Controllers\Magasinier\PickingController::class, 'reportAnomaly'])->name('magasinier.picking.anomalie');
     Route::get('/colis/create', fn () => redirect()->route('colis.index'))->name('colis.create');
     Route::get('/scanner', fn () => view('scanner.index'))->name('scanner.index');
     Route::get('/clients', fn () => view('clients.index'))->name('clients.index');
