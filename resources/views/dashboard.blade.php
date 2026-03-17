@@ -1,5 +1,51 @@
 <x-app-layout>
     <div class="space-y-6">
+        {{-- Bandeau Watchdog : Colis en souffrance --}}
+        @if(($colisEnSouffrance ?? collect())->count() > 0)
+            <div class="rounded-xl bg-red-50 border-l-4 border-red-500 border border-red-200/80 p-4 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                            <svg class="h-5 w-5 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-red-900">
+                                ⚠️ WATCHDOG : {{ $colisEnSouffrance->count() }} colis sont en souffrance dans l'entrepôt
+                            </p>
+                            <p class="mt-0.5 text-sm text-red-700">
+                                Plus de 24h sans mouvement — Action requise
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl font-bold text-red-600">{{ $colisEnSouffrance->count() }}</span>
+                        <details class="relative group">
+                            <summary class="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                Agir — Sélectionner un colis
+                            </summary>
+                            <div class="absolute right-0 mt-2 w-80 max-h-72 overflow-y-auto rounded-xl border border-red-200 bg-white shadow-lg z-10 py-2">
+                                @foreach($colisEnSouffrance as $c)
+                                    <a href="{{ route('colis.show', $c) }}" class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-red-50 transition-colors border-b border-slate-100 last:border-0">
+                                        <div class="min-w-0 flex-1">
+                                            <span class="font-mono text-sm font-medium text-slate-800 block truncate">{{ $c->code_qr ?? Str::limit($c->id, 14) }}</span>
+                                            <span class="text-xs text-slate-500">{{ $c->client ? $c->client->prenom . ' ' . $c->client->nom : '-' }}</span>
+                                        </div>
+                                        <span class="text-xs text-red-600 font-medium shrink-0">Voir le colis →</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </details>
+                        <a href="{{ route('colis.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors">
+                            Tous les colis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if (session('success'))
             <div class="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-800 shadow-sm">
                 {{ session('success') }}
@@ -379,5 +425,14 @@
                 </p>
             </div>
         @endif
+
+        {{-- Bouton de test Watchdog (Dev) --}}
+        <div class="pt-4 border-t border-slate-200">
+            <a href="{{ route('test-watchdog') }}"
+               class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700 transition-colors">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Simuler une alerte (Dev)
+            </a>
+        </div>
     </div>
 </x-app-layout>

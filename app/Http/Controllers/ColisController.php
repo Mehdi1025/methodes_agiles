@@ -16,7 +16,7 @@ class ColisController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Colis::with('client')->latest();
+        $query = Colis::with('client');
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -25,6 +25,11 @@ class ColisController extends Controller
                     ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', '%' . $search . '%')->orWhere('prenom', 'like', '%' . $search . '%'));
             });
         }
+
+        // Tri intelligent : colis en souffrance en premier, puis par date décroissante
+        $seuil = now()->subHours(24);
+        $query->orderByRaw('(statut NOT IN (?, ?, ?) AND created_at <= ?) DESC', ['livré', 'en_expédition', 'anomalie', $seuil])
+            ->orderBy('created_at', 'desc');
 
         $colis = $query->paginate(10)->withQueryString();
 
@@ -41,6 +46,30 @@ class ColisController extends Controller
     {
         $colis = Colis::with('client')->findOrFail($id);
         return view('colis.show', ['colis' => $colis]);
+    }
+
+    /**
+     * Mise à jour rapide du statut depuis la liste (actions colis en souffrance).
+     */
+    public function updateStatutRapide(Request $request, Colis $colis)
+    {
+        $request->validate(['statut' => 'required|string|in:en_expédition,anomalie']);
+
+        $ancienStatut = $colis->statut;
+        $colis->update(['statut' => $request->statut]);
+
+        if ($ancienStatut !== $request->statut) {
+            HistoriqueMouvement::create([
+                'colis_id' => $colis->id,
+                'user_id' => auth()->id(),
+                'ancien_statut' => $ancienStatut,
+                'nouveau_statut' => $request->statut,
+                'date_mouvement' => now(),
+                'commentaire' => 'Changement rapide depuis la liste (colis en souffrance)',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Statut mis à jour avec succès');
     }
 
     /**

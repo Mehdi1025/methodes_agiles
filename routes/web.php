@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminEquipeController;
 use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminParametreController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Models\Colis;
 use Illuminate\Support\Facades\Route;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -27,6 +28,28 @@ Route::get('/switch-mode', [ModeController::class, 'switch'])
     ->middleware(['auth', 'verified'])
     ->name('mode.switch');
 
+// Route de test Watchdog (Dev) : crée un colis fictif en souffrance
+Route::get('/test-watchdog', function () {
+    $client = \App\Models\Client::first();
+    if (!$client) {
+        return redirect()->route('dashboard')->with('error', 'Aucun client en base. Créez un client d\'abord.');
+    }
+    $colis = Colis::create([
+        'code_qr' => 'TEST-WATCHDOG-' . now()->format('YmdHis') . '-' . substr(uniqid(), -4),
+        'description' => 'Colis fictif pour test Watchdog',
+        'poids_kg' => 1.5,
+        'dimensions' => '30x20x15',
+        'statut' => 'en_stock',
+        'date_reception' => now()->subDays(3),
+        'date_expedition' => null,
+        'fragile' => false,
+        'client_id' => $client->id,
+    ]);
+    $colis->created_at = now()->subDays(3);
+    $colis->saveQuietly();
+    return redirect()->route('dashboard')->with('success', 'Alerte générée avec succès');
+})->middleware(['auth', 'verified'])->name('test-watchdog');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     
     // --- ROUTES SPÉCIFIQUES (À mettre AVANT les ressources) ---
@@ -34,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/colis/scan', [ReceptionController::class, 'scan'])->name('magasinier.colis.scan');
     Route::get('/colis/du-jour', [ReceptionController::class, 'colisDuJour'])->name('magasinier.colis.du-jour');
     Route::get('/colis/lookup', [ColisController::class, 'lookup'])->name('colis.lookup');
+    Route::post('/colis/{colis}/statut-rapide', [ColisController::class, 'updateStatutRapide'])->name('colis.statut-rapide');
 
     // --- RESSOURCES ---
     Route::resource('colis', ColisController::class);

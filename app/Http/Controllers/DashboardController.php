@@ -51,7 +51,13 @@ class DashboardController extends Controller
             $lastColis = Colis::with('client')->find($lastId);
         }
 
-        return view('dashboard-simple', compact('lastColis'));
+        $colisEnSouffrance = Colis::with('client')
+            ->whereNotIn('statut', ['livré', 'en_expédition', 'anomalie'])
+            ->where('created_at', '<=', now()->subHours(24))
+            ->orderBy('created_at')
+            ->get();
+
+        return view('dashboard-simple', compact('lastColis', 'colisEnSouffrance'));
     }
 
     /**
@@ -105,6 +111,13 @@ class DashboardController extends Controller
             ->where('statut', '!=', 'livré')
             ->count();
 
+        // Watchdog : colis en souffrance (statut ni livré, ni expédié, ni anomalie, créés il y a +24h)
+        $colisEnSouffrance = Colis::with('client')
+            ->whereNotIn('statut', ['livré', 'en_expédition', 'anomalie'])
+            ->where('created_at', '<=', now()->subHours(24))
+            ->orderBy('created_at')
+            ->get();
+
         $totalEmplacements = Emplacement::count();
         $emplacementsOccupes = Emplacement::where('occupe', true)->count();
         $tauxOccupation = $totalEmplacements > 0
@@ -155,6 +168,7 @@ class DashboardController extends Controller
             'alertes',
             'derniersColis',
             'colisFragilesEnRetard',
+            'colisEnSouffrance',
             'tauxOccupation',
             'poidsTotal',
             'colisFragiles',
