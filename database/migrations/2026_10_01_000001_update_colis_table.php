@@ -10,8 +10,8 @@ class UpdateColisTable extends Migration
     public function up(): void
     {
         Schema::table('colis', function (Blueprint $table) {
-            // Assurez-vous que la colonne description est nullable
-            $table->string('description')->nullable()->change();
+            // Assurez-vous que la colonne description est nullable (text évite la troncature)
+            $table->text('description')->nullable()->change();
 
             // Assurez-vous que la colonne date_reception est de type DATE et non nullable
             $table->date('date_reception')->nullable(false)->change();
@@ -27,10 +27,10 @@ class UpdateColisTable extends Migration
     public function down(): void
     {
         Schema::table('colis', function (Blueprint $table) {
-            // Revenir à l'état précédent si nécessaire
-            $table->string('description')->nullable(false)->change();
-            $table->string('date_reception')->change();
-            $table->string('date_expedition')->nullable(false)->change();
+            // Rétablir l'état de la migration create_colis_table
+            $table->text('description')->nullable(false)->change();
+            $table->date('date_reception')->nullable(false)->change();
+            $table->date('date_expedition')->nullable()->change();
             $table->boolean('fragile')->default(false)->change();
         });
     }

@@ -4,6 +4,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Models\Colis;
 use App\Models\Client;
 use App\Models\Transporteur; // Ajout du modèle Transporteur
@@ -14,13 +16,35 @@ class ColisController extends Controller
     public function index()
     {
         $colis = Colis::with('client')->orderBy('created_at', 'desc')->get();
-        return view('colis.index', compact('colis'));
+        $totalColis = Colis::count();
+        $colisLivres = Colis::where('statut', 'livré')->count();
+        $colisEnCours = Colis::whereIn('statut', ['reçu', 'en_stock', 'en_expédition'])->count();
+        $topClients = Client::withCount('colis')->having('colis_count', '>', 0)->orderByDesc('colis_count')->limit(5)->get();
+        return view('colis.index', compact('colis', 'totalColis', 'colisLivres', 'colisEnCours', 'topClients'));
     }
 
     public function show($id)
     {
         $colis = Colis::with('client')->findOrFail($id);
         return view('colis.show', ['colis' => $colis]);
+    }
+
+    /**
+     * Redirige vers show si le code existe, sinon vers create avec le code pré-rempli.
+     */
+    public function lookup(Request $request)
+    {
+        $code = $request->query('code_qr');
+        if (empty($code)) {
+            return redirect()->route('colis.create');
+        }
+
+        $colis = Colis::where('code_qr', $code)->orWhere('id', $code)->first();
+        if ($colis) {
+            return redirect()->route('colis.show', $colis->id);
+        }
+
+        return redirect()->to(route('colis.create') . '?code_qr=' . urlencode($code));
     }
 
     public function create()
@@ -33,28 +57,50 @@ class ColisController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('Colis store - données reçues', $request->all());
+
+        // Auto-génération du code_qr si vide
+        $codeQr = $request->filled('code_qr') ? $request->code_qr : null;
+        if (empty($codeQr)) {
+            $codeQr = 'COL-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(6));
+        }
+        $request->merge([
+            'code_qr' => $codeQr,
+            'transporteur_id' => $request->filled('transporteur_id') ? $request->transporteur_id : null,
+            'emplacement_id' => $request->filled('emplacement_id') ? $request->emplacement_id : null,
+        ]);
+
         $validated = $request->validate([
+            'code_qr' => 'nullable|string|max:50|unique:colis,code_qr',
             'client_id' => 'required|exists:clients,id',
             'statut' => 'required|string|max:255',
             'date_reception' => 'required|date',
-            'description' => 'nullable|string', // Description n'est plus obligatoire
-            'poids_kg' => 'nullable|numeric',
-            'dimensions' => 'nullable|string',
+            'description' => 'nullable|string|max:65535',
+            'poids_kg' => 'nullable|numeric|min:0',
+            'dimensions' => 'nullable|string|max:255',
             'fragile' => 'nullable|boolean',
             'date_expedition' => 'nullable|date',
             'transporteur_id' => 'nullable|exists:transporteurs,id',
             'emplacement_id' => 'nullable|exists:emplacements,id',
         ]);
 
-        $colis = new Colis();
-        $colis->client_id = $validated['client_id'];
-        $colis->statut = $validated['statut'];
-        $colis->date_reception = $validated['date_reception'];
-        $colis->description = $request->input('description', ''); // Valeur par défaut vide
-        $colis->poids_kg = $request->input('poids_kg', 0);
-        $colis->dimensions = $request->input('dimensions', '');
-        $colis->fragile = $request->input('fragile', false);
-        $colis->save();
+        try {
+            $colis = Colis::create([
+                'code_qr' => $validated['code_qr'] ?: null,
+                'client_id' => $validated['client_id'],
+                'statut' => $validated['statut'],
+                'date_reception' => $validated['date_reception'],
+                'description' => $validated['description'] ?? '',
+                'poids_kg' => $validated['poids_kg'] ?? 0,
+                'dimensions' => $validated['dimensions'] ?? '',
+                'fragile' => (bool) ($validated['fragile'] ?? false),
+                'date_expedition' => $validated['date_expedition'] ?? null,
+                'transporteur_id' => $validated['transporteur_id'] ?: null,
+                'emplacement_id' => $validated['emplacement_id'] ?: null,
+            ]);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
 
         return redirect()->route('colis.index');
     }
@@ -74,14 +120,19 @@ class ColisController extends Controller
             'client_id' => 'required|exists:clients,id',
             'statut' => 'required|string|max:255',
             'date_reception' => 'required|date',
-            'description' => 'nullable|string',
-            'poids_kg' => 'nullable|numeric',
-            'dimensions' => 'nullable|string',
+            'description' => 'nullable|string|max:65535',
+            'poids_kg' => 'nullable|numeric|min:0',
+            'dimensions' => 'nullable|string|max:255',
             'fragile' => 'nullable|boolean',
             'date_expedition' => 'nullable|date',
             'transporteur_id' => 'nullable|exists:transporteurs,id',
             'emplacement_id' => 'nullable|exists:emplacements,id',
         ]);
+
+        // Valeurs par défaut pour colonnes NOT NULL (poids_kg, dimensions)
+        $validated['poids_kg'] = $validated['poids_kg'] ?? 0;
+        $validated['dimensions'] = $validated['dimensions'] ?? '';
+        $validated['description'] = $validated['description'] ?? '';
 
         $colis = Colis::findOrFail($id);
         $colis->update($validated);

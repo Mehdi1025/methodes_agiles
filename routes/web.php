@@ -25,7 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // --- ROUTES SPÉCIFIQUES (À mettre AVANT les ressources) ---
     Route::get('/colis/scanner', [ReceptionController::class, 'index'])->name('magasinier.colis.scanner');
     Route::post('/colis/scan', [ReceptionController::class, 'scan'])->name('magasinier.colis.scan');
-    
+    Route::get('/colis/lookup', [ColisController::class, 'lookup'])->name('colis.lookup');
+
     // --- RESSOURCES ---
     Route::resource('colis', ColisController::class);
 
