@@ -45,7 +45,13 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     Client
                                 </dt>
-                                <dd class="mt-1 text-sm font-semibold text-gray-900">{{ $colis->client->nom ?? '-' }}</dd>
+                                <dd class="mt-1">
+                                    @if($colis->client)
+                                        <a href="{{ route('clients.show', $colis->client->id) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">{{ $colis->client->prenom }} {{ $colis->client->nom }}</a>
+                                    @else
+                                        <span class="text-sm font-semibold text-gray-900">-</span>
+                                    @endif
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500 flex items-center gap-2">

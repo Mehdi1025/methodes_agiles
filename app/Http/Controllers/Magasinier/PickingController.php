@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Magasinier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Colis;
+use App\Models\HistoriqueMouvement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,6 +36,14 @@ class PickingController extends Controller
         }
 
         $colis->update(['statut' => 'en_preparation']);
+        HistoriqueMouvement::create([
+            'colis_id' => $colis->id,
+            'user_id' => auth()->id(),
+            'ancien_statut' => 'en_stock',
+            'nouveau_statut' => 'en_preparation',
+            'date_mouvement' => now(),
+            'commentaire' => 'Pick - colis mis en préparation',
+        ]);
 
         return response()->json([
             'success' => true,
@@ -51,7 +60,16 @@ class PickingController extends Controller
             'raison' => ['required', 'string', 'max:500'],
         ]);
 
+        $ancienStatut = $colis->statut;
         $colis->update(['statut' => 'anomalie']);
+        HistoriqueMouvement::create([
+            'colis_id' => $colis->id,
+            'user_id' => auth()->id(),
+            'ancien_statut' => $ancienStatut,
+            'nouveau_statut' => 'anomalie',
+            'date_mouvement' => now(),
+            'commentaire' => 'Anomalie signalée : ' . $validated['raison'],
+        ]);
 
         $reference = $colis->code_qr ?? '#' . substr($colis->id, 0, 8);
 

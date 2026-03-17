@@ -61,8 +61,9 @@ class StatisticController extends Controller
             ? round(($colisRetour / $totalColis) * 100, 1)
             : 0;
 
-        // Santé entrepôt
-        $poidsTotalStock = (float) Colis::where('statut', 'en_stock')->sum('poids_kg');
+        // Santé entrepôt (reçu + en_stock = colis physiquement en entrepôt)
+        $poidsTotalStock = (float) (Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])
+            ->selectRaw('COALESCE(SUM(poids_kg), 0) as total')->value('total') ?? 0);
         $valeurEstimeeStock = $totalColis > 0 ? $totalColis * 15 : 0; // ~15€/colis simulé
         $colisFragiles = Colis::where('fragile', true)->count();
         $pourcentageFragile = $totalColis > 0
@@ -159,7 +160,7 @@ class StatisticController extends Controller
             fputcsv($handle, ['Total colis', Colis::count(), 'unités'], ';');
             fputcsv($handle, ['Colis livrés (mois)', Colis::where('statut', 'livré')->whereMonth('date_expedition', now()->month)->count(), 'unités'], ';');
             fputcsv($handle, ['Colis en transit', Colis::where('statut', 'en_expédition')->count(), 'unités'], ';');
-            fputcsv($handle, ['Poids total stock', Colis::where('statut', 'en_stock')->sum('poids_kg'), 'kg'], ';');
+            fputcsv($handle, ['Poids total stock', Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])->selectRaw('COALESCE(SUM(poids_kg), 0) as total')->value('total') ?? 0, 'kg'], ';');
 
             fclose($handle);
         }, 'rapport-logistique-' . now()->format('Y-m-d') . '.csv', $headers);

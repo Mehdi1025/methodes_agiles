@@ -150,6 +150,13 @@
                 <header class="h-16 shrink-0 bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-between px-6 gap-4 border-b border-gray-100 dark:border-zinc-800 transition-colors duration-300">
                     <div class="flex items-center gap-4 flex-1 min-w-0">
                         @if(auth()->user()->role !== 'admin')
+                        {{-- Toggle Mode Avancé / Terrain --}}
+                        <a href="{{ route('mode.switch') }}?mode=simple"
+                           class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-sm font-medium transition-colors"
+                           title="Passer en Mode Terrain (interface simplifiée)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            Mode Terrain
+                        </a>
                         <button type="button" onclick="openCommandPalette()" class="flex items-center gap-3 flex-1 max-w-xl px-4 py-2.5 text-left bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700 transition-all group">
                             <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ColisController;
+use App\Http\Controllers\ModeController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\StatisticController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminParametreController;
 use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 Route::redirect('/', '/login');
 
@@ -20,11 +23,16 @@ Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/switch-mode', [ModeController::class, 'switch'])
+    ->middleware(['auth', 'verified'])
+    ->name('mode.switch');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     
     // --- ROUTES SPÉCIFIQUES (À mettre AVANT les ressources) ---
     Route::get('/colis/scanner', [ReceptionController::class, 'index'])->name('magasinier.colis.scanner');
     Route::post('/colis/scan', [ReceptionController::class, 'scan'])->name('magasinier.colis.scan');
+    Route::get('/colis/du-jour', [ReceptionController::class, 'colisDuJour'])->name('magasinier.colis.du-jour');
     Route::get('/colis/lookup', [ColisController::class, 'lookup'])->name('colis.lookup');
 
     // --- RESSOURCES ---
@@ -39,7 +47,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // --- AUTRES VUES ---
     Route::get('/scanner', fn () => view('scanner.index'))->name('scanner.index');
-    Route::get('/clients', fn () => view('clients.index'))->name('clients.index');
+    Route::get('/scanner/test-qr', function () {
+        $code = request('code', 'TEST-' . now()->format('YmdHis'));
+        $qrSvg = QrCode::format('svg')->size(256)->generate($code);
+        return view('scanner.test-qr', ['code' => $code, 'qrSvg' => $qrSvg]);
+    })->name('scanner.test-qr');
+    Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
+    Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+    Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
+    Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+    Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
     Route::get('/transporteurs', fn () => view('transporteurs.index'))->name('transporteurs.index');
     
     // --- IA & STATS ---
@@ -57,6 +75,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('/parametres/transporteurs', [AdminParametreController::class, 'storeTransporteur'])->name('transporteurs.store');
     Route::delete('/parametres/transporteurs/{id}', [AdminParametreController::class, 'destroyTransporteur'])->name('transporteurs.destroy');
     Route::post('/system/clear-cache', [DashboardController::class, 'clearCache'])->name('clear-cache');
+    Route::get('/dashboard/activity-feed', [DashboardController::class, 'activityFeed'])->name('dashboard.activity-feed');
     Route::resource('users', AdminUserController::class)->except(['show']);
 });
 

@@ -7,6 +7,7 @@ use App\Models\Emplacement;
 use App\Models\HistoriqueMouvement;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Affiche le tableau de bord selon le rôle (Admin ou Logistique).
+     * Affiche le tableau de bord selon le rôle et le mode (Avancé / Terrain).
      */
     public function __invoke(): View
     {
@@ -33,7 +34,24 @@ class DashboardController extends Controller
             return $this->adminDashboard();
         }
 
+        if (session('mode') === 'simple') {
+            return $this->dashboardSimple();
+        }
+
         return $this->logistiqueDashboard();
+    }
+
+    /**
+     * Dashboard Mode Terrain (ergonomique, mobile-first, touch-friendly).
+     */
+    protected function dashboardSimple(): View
+    {
+        $lastColis = null;
+        if ($lastId = session('last_scanned_colis_id')) {
+            $lastColis = Colis::with('client')->find($lastId);
+        }
+
+        return view('dashboard-simple', compact('lastColis'));
     }
 
     /**
@@ -41,12 +59,35 @@ class DashboardController extends Controller
      */
     protected function logistiqueDashboard(): View
     {
-        $enStock = Colis::where('statut', 'en_stock')->count();
+        $enStock = Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])->count();
         $enExpedition = Colis::where('statut', 'en_expédition')->count();
         $livresMois = Colis::where('statut', 'livré')
             ->whereMonth('date_expedition', now()->month)
             ->whereYear('date_expedition', now()->year)
             ->count();
+
+        // Tendances réelles : réceptions ce mois vs mois précédent
+        $receptionsCeMois = Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])
+            ->whereMonth('date_reception', now()->month)
+            ->whereYear('date_reception', now()->year)
+            ->count();
+        $receptionsMoisPrec = Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])
+            ->whereMonth('date_reception', now()->subMonth()->month)
+            ->whereYear('date_reception', now()->subMonth()->year)
+            ->count();
+        $tendanceEnStock = $receptionsMoisPrec > 0
+            ? round((($receptionsCeMois - $receptionsMoisPrec) / $receptionsMoisPrec) * 100)
+            : ($receptionsCeMois > 0 ? 100 : null);
+
+        $livresMoisPrec = Colis::where('statut', 'livré')
+            ->whereMonth('date_expedition', now()->subMonth()->month)
+            ->whereYear('date_expedition', now()->subMonth()->year)
+            ->count();
+        $tendanceLivres = $livresMoisPrec > 0
+            ? round((($livresMois - $livresMoisPrec) / $livresMoisPrec) * 100)
+            : ($livresMois > 0 ? 100 : null);
+
+        $tendanceExpedition = null; // Pas de tendance fiable pour expédition en cours
 
         $alertes = Colis::whereNotNull('date_expedition')
             ->where('date_expedition', '<', now()->startOfDay())
@@ -70,9 +111,42 @@ class DashboardController extends Controller
             ? (int) round(($emplacementsOccupes / $totalEmplacements) * 100)
             : 0;
 
-        $poidsTotal = (float) Colis::where('statut', 'en_stock')->sum('poids_kg');
-        $colisFragiles = Colis::where('statut', 'en_stock')->where('fragile', true)->count();
+        $poidsTotal = (float) (Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])
+            ->selectRaw('COALESCE(SUM(poids_kg), 0) as total')->value('total') ?? 0);
+        $colisFragiles = Colis::whereIn('statut', ['en_stock', 'reçu', 'en_preparation'])->where('fragile', true)->count();
         $tauxRetours = Colis::where('statut', 'retour')->count();
+
+        // Stats par statut (pour donut)
+        $statsStatuts = Colis::selectRaw('statut, count(*) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut')
+            ->toArray();
+
+        // Évolution hebdomadaire : colis créés par jour (7 derniers jours)
+        $evolutionHebdo = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $count = Colis::whereDate('created_at', $date)->count();
+            $evolutionHebdo[] = [
+                'label' => $date->locale('fr')->translatedFormat('D'),
+                'total' => $count,
+            ];
+        }
+
+        // KPIs avancés
+        $poidsMois = (float) Colis::whereMonth('date_reception', now()->month)
+            ->whereYear('date_reception', now()->year)
+            ->sum('poids_kg');
+        $totalColis = Colis::count();
+        $colisExpedies = Colis::whereNotNull('date_expedition')->count();
+        $tauxExpedition = $totalColis > 0
+            ? round(($colisExpedies / $totalColis) * 100, 1)
+            : 0;
+
+        $kpiAvances = [
+            'poids_mois_kg' => $poidsMois,
+            'taux_expedition' => $tauxExpedition,
+        ];
 
         return view('dashboard', compact(
             'enStock',
@@ -84,7 +158,13 @@ class DashboardController extends Controller
             'tauxOccupation',
             'poidsTotal',
             'colisFragiles',
-            'tauxRetours'
+            'tauxRetours',
+            'statsStatuts',
+            'evolutionHebdo',
+            'kpiAvances',
+            'tendanceEnStock',
+            'tendanceLivres',
+            'tendanceExpedition'
         ));
     }
 
@@ -112,6 +192,15 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        $activityFeed = HistoriqueMouvement::with(['user', 'colis'])
+            ->orderByDesc('date_mouvement')
+            ->take(15)
+            ->get()
+            ->map(function ($m) {
+                $m->type = $this->detectMovementType($m);
+                return $m;
+            });
+
         $topMagasiniers = HistoriqueMouvement::with('user')
             ->select('user_id', DB::raw('count(*) as total_mouvements'))
             ->whereDate('date_mouvement', Carbon::today())
@@ -133,6 +222,46 @@ class DashboardController extends Controller
             'laravel_version' => app()->version(),
         ];
 
-        return view('admin.dashboard', compact('kpis', 'auditLogs', 'topMagasiniers', 'systemStatus'));
+        return view('admin.dashboard', compact('kpis', 'auditLogs', 'activityFeed', 'topMagasiniers', 'systemStatus'));
+    }
+
+    /**
+     * Détecte le type d'un mouvement pour le flux d'activité.
+     */
+    protected function detectMovementType(HistoriqueMouvement $m): string
+    {
+        $nouveau = $m->nouveau_statut;
+        $ancien = $m->ancien_statut;
+
+        if ($ancien === null) {
+            return 'creation';
+        }
+        if (in_array($nouveau, ['anomalie', 'retour'], true)) {
+            return 'anomalie';
+        }
+        if (in_array($nouveau, ['reçu', 'en_stock'], true)) {
+            return 'scan_entree';
+        }
+        if (in_array($nouveau, ['en_expédition', 'livré'], true)) {
+            return 'scan_sortie';
+        }
+        return 'modification';
+    }
+
+    /**
+     * Retourne le HTML du flux d'activité (pour rafraîchissement AJAX).
+     */
+    public function activityFeed(Request $request): \Illuminate\Contracts\View\View
+    {
+        $activityFeed = HistoriqueMouvement::with(['user', 'colis'])
+            ->orderByDesc('date_mouvement')
+            ->take(15)
+            ->get()
+            ->map(function ($m) {
+                $m->type = $this->detectMovementType($m);
+                return $m;
+            });
+
+        return view('admin.partials.activity-feed', compact('activityFeed'));
     }
 }

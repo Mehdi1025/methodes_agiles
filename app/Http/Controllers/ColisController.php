@@ -8,19 +8,33 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Colis;
 use App\Models\Client;
-use App\Models\Transporteur; // Ajout du modèle Transporteur
-use App\Models\Emplacement; // Ajout du modèle Emplacement
+use App\Models\HistoriqueMouvement;
+use App\Models\Transporteur;
+use App\Models\Emplacement;
 
 class ColisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $colis = Colis::with('client')->orderBy('created_at', 'desc')->get();
+        $query = Colis::with('client')->latest();
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code_qr', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhereHas('client', fn ($c) => $c->where('nom', 'like', '%' . $search . '%')->orWhere('prenom', 'like', '%' . $search . '%'));
+            });
+        }
+
+        $colis = $query->paginate(10)->withQueryString();
+
         $totalColis = Colis::count();
-        $colisLivres = Colis::where('statut', 'livré')->count();
-        $colisEnCours = Colis::whereIn('statut', ['reçu', 'en_stock', 'en_expédition'])->count();
+        $colisFragiles = Colis::where('fragile', true)->count();
+        $expediesAujourdhui = Colis::whereDate('date_expedition', now()->toDateString())->count();
+        $enAttente = Colis::whereIn('statut', ['reçu', 'en_stock', 'en_preparation'])->count();
         $topClients = Client::withCount('colis')->having('colis_count', '>', 0)->orderByDesc('colis_count')->limit(5)->get();
-        return view('colis.index', compact('colis', 'totalColis', 'colisLivres', 'colisEnCours', 'topClients'));
+
+        return view('colis.index', compact('colis', 'totalColis', 'colisFragiles', 'expediesAujourdhui', 'enAttente', 'topClients'));
     }
 
     public function show($id)
@@ -41,6 +55,7 @@ class ColisController extends Controller
 
         $colis = Colis::where('code_qr', $code)->orWhere('id', $code)->first();
         if ($colis) {
+            session(['last_scanned_colis_id' => $colis->id]);
             return redirect()->route('colis.show', $colis->id);
         }
 
@@ -98,6 +113,14 @@ class ColisController extends Controller
                 'transporteur_id' => $validated['transporteur_id'] ?: null,
                 'emplacement_id' => $validated['emplacement_id'] ?: null,
             ]);
+            HistoriqueMouvement::create([
+                'colis_id' => $colis->id,
+                'user_id' => auth()->id(),
+                'ancien_statut' => null,
+                'nouveau_statut' => $colis->statut,
+                'date_mouvement' => now(),
+                'commentaire' => 'Création manuelle du colis',
+            ]);
         } catch (\Exception $e) {
             dd($e->getMessage());
         }
@@ -135,7 +158,19 @@ class ColisController extends Controller
         $validated['description'] = $validated['description'] ?? '';
 
         $colis = Colis::findOrFail($id);
+        $ancienStatut = $colis->statut;
         $colis->update($validated);
+
+        if ($ancienStatut !== $validated['statut']) {
+            HistoriqueMouvement::create([
+                'colis_id' => $colis->id,
+                'user_id' => auth()->id(),
+                'ancien_statut' => $ancienStatut,
+                'nouveau_statut' => $validated['statut'],
+                'date_mouvement' => now(),
+                'commentaire' => 'Modification du statut via l\'interface colis',
+            ]);
+        }
 
         return redirect()->route('colis.show', $colis->id)->with('success', 'Colis mis à jour avec succès.');
     }
