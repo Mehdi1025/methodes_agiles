@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Colis;
-use App\Models\User;
 use App\Services\OllamaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,8 +23,8 @@ class AssistantController extends Controller
     }
 
     /**
-     * Traite le message du chat et retourne la réponse de l'IA en JSON.
-     * Injecte le contexte temps réel de l'entrepôt pour éviter les hallucinations.
+     * Routeur d'intentions : intercepte les requêtes courantes en PHP,
+     * n'appelle Ollama que pour les questions non routées.
      */
     public function chat(Request $request): JsonResponse
     {
@@ -33,35 +32,47 @@ class AssistantController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        $message = $validated['message'];
+        $question = trim($validated['message']);
+        $questionLower = mb_strtolower($question);
 
-        // 1. Récupération des données en temps réel (Context Injection)
-        $totalColis = Colis::count();
-        $colisEnStock = Colis::whereIn('statut', ['en_stock', 'reçu'])->count();
-        $colisEnExpedition = Colis::where('statut', 'en_expédition')->count();
-        $colisLivres = Colis::where('statut', 'livré')->count();
-        $colisRetour = Colis::where('statut', 'retour')->count();
-        $employesActifs = User::count();
+        // ─── 1. Récupération des variables ───────────────────────────────────
+        $total = Colis::count();
+        $stock = Colis::whereIn('statut', ['en_stock', 'reçu'])->count();
+        $expedies = Colis::where('statut', 'en_expédition')->count();
+        $livres = Colis::where('statut', 'livré')->count();
+        $retours = Colis::where('statut', 'retour')->count();
 
-        // 2. System Prompt dynamique (Le Cerveau de l'IA)
-        $systemPrompt = "Tu es 'LogisBot', l'assistant IA expert de notre WMS (Warehouse Management System).
+        // ─── INTERCEPTION 1 : Salutations ──────────────────────────────────────
+        if (preg_match('/\b(bonjour|salut|hello|hi|hey|coucou)\b/i', $questionLower)) {
+            return response()->json([
+                'reply' => "Bonjour. L'entrepôt compte actuellement {$total} colis, dont {$expedies} en cours d'expédition.",
+            ]);
+        }
 
-RÈGLES STRICTES :
-- Sois concis, professionnel et direct.
-- Si on te dit bonjour, salue poliment et propose ton aide. N'invente pas de questions.
-- Si la question n'a aucun rapport avec la logistique ou l'entrepôt, refuse poliment de répondre.
+        // ─── INTERCEPTION 2 : Statistiques ─────────────────────────────────────
+        if (preg_match('/\b(combien|statistiques|chiffres|stock|total|état|etat)\b/i', $questionLower)) {
+            return response()->json([
+                'reply' => "Voici l'état des flux : {$total} colis gérés, {$stock} en stock, {$expedies} en expédition et {$livres} livrés.",
+            ]);
+        }
 
-Voici les DONNÉES EN TEMPS RÉEL de la base de données de l'entrepôt à cet instant précis :
-- Nombre total de colis dans le système : {$totalColis}
-- Colis actuellement en stock / en attente (reçu ou en_stock) : {$colisEnStock}
-- Colis en cours d'expédition : {$colisEnExpedition}
-- Colis livrés : {$colisLivres}
-- Colis en retour : {$colisRetour}
-- Nombre d'employés / magasiniers : {$employesActifs}
+        // ─── INTERCEPTION 3 : Hors-sujet ───────────────────────────────────────
+        if (preg_match('/\b(naissance|âge|age|qui|blague|créateur|creeur|météo|meteo|vie privée|vie privee)\b/i', $questionLower)) {
+            return response()->json([
+                'reply' => "Je suis LogisBot, l'assistant logistique de cet entrepôt. Je ne réponds qu'aux requêtes professionnelles.",
+            ]);
+        }
 
-Utilise ces données UNIQUEMENT si la question de l'utilisateur le nécessite. Ne récite pas ces chiffres s'il dit juste 'bonjour'.";
+        // ─── APPEL OLLAMA (aucune interception) ─────────────────────────────────
+        $stats = [
+            'total' => $total,
+            'stock' => $stock,
+            'expedies' => $expedies,
+            'livres' => $livres,
+            'retours' => $retours,
+        ];
 
-        $answer = $this->ollamaService->ask($message, systemPrompt: $systemPrompt);
+        $answer = $this->ollamaService->chat($question, $stats);
 
         return response()->json([
             'reply' => $answer,

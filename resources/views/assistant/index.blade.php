@@ -143,6 +143,9 @@
                 addLoadingIndicator();
 
                 try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
                     const response = await fetch('{{ route("assistant.chat") }}', {
                         method: 'POST',
                         headers: {
@@ -151,9 +154,11 @@
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ message: message.trim() })
+                        body: JSON.stringify({ message: message.trim() }),
+                        signal: controller.signal
                     });
 
+                    clearTimeout(timeoutId);
                     const data = await response.json();
                     removeLoadingIndicator();
 
@@ -164,7 +169,10 @@
                     }
                 } catch (err) {
                     removeLoadingIndicator();
-                    addMessage("Impossible de contacter l'assistant. Vérifiez votre connexion et qu'Ollama est bien lancé.", 'ai');
+                    const msg = err.name === 'AbortError'
+                        ? "LogisBot est en train de scanner l'entrepôt, réessayez dans un instant."
+                        : "Impossible de contacter l'assistant. Vérifiez votre connexion et qu'Ollama est bien lancé.";
+                    addMessage(msg, 'ai');
                 } finally {
                     sendBtn.disabled = false;
                 }
